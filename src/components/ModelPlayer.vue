@@ -3,9 +3,8 @@
     class="w-full aspect-square bg-slate-50 rounded-[2rem] overflow-hidden border border-slate-100 shadow-inner relative"
   >
     <model-viewer
-      src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
-      poster="https://modelviewer.dev/shared-assets/models/poster-astronaut.png"
-      alt="Modelo 3D"
+      :src="src"
+      alt="Modelo 3D dinámico"
       auto-rotate
       camera-controls
       ar
@@ -30,7 +29,10 @@
 </template>
 
 <script setup lang="ts">
-// El script ahora estará feliz porque los tags de arriba cierran bien
+// Definimos la "prop" para recibir la URL del modelo desde el padre
+defineProps<{
+  src: string
+}>()
 </script>
 
 <style scoped>

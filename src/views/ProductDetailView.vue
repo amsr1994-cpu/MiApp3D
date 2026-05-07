@@ -1,33 +1,50 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router' // Importamos useRoute
 import ModelPlayer from '../components/ModelPlayer.vue'
 
 const router = useRouter()
+const route = useRoute() // Definimos la variable route
 
-// --- ESTADOS ---
+// 1. PRIMERO definimos la base de datos
+const productsDatabase: Record<string, { name: string; price: number; modelUrl: string }> = {
+  '1': {
+    name: 'Soporte Motor V8',
+    price: 19.9,
+    modelUrl: '/models/model1.glb',
+  },
+  '2': {
+    name: 'Segunda Pieza Pro',
+    price: 25.0,
+    modelUrl: '/models/model2.glb',
+  },
+}
+
+// 2. DESPUÉS usamos la base de datos en el computed
+const currentProduct = computed(() => {
+  const id = route.params.id as string
+  // Usamos el producto '1' como "paracaídas" si el ID no existe
+  return productsDatabase[id] || productsDatabase['1']
+})
+
+// --- EL RESTO DE TUS VARIABLES ---
 const showModel = ref(false)
 const selectedMaterial = ref('PLA Eco')
-const showCheckout = ref(false) // Controla el panel de pago
+const showCheckout = ref(false)
 const paymentStatus = ref<'idle' | 'processing' | 'success'>('idle')
 
-// --- LÓGICA DE PRECIOS ---
 const materialPrices: Record<string, number> = {
   'PLA Eco': 19.9,
   'PETG Carbon': 29.9,
   'Nylon PA12': 45.0,
 }
+
 const currentPrice = computed(() => materialPrices[selectedMaterial.value] || 0)
 
-// --- PROCESO DE PAGO ---
 const startPayment = () => {
   paymentStatus.value = 'processing'
-
-  // Simulamos la verificación bancaria/biométrica
   setTimeout(() => {
     paymentStatus.value = 'success'
-
-    // Después de ver el check verde, vamos a Tracking
     setTimeout(() => {
       showCheckout.value = false
       router.push('/tracking')
@@ -64,9 +81,9 @@ const startPayment = () => {
         </div>
 
         <div v-else class="mb-10 animate-in fade-in zoom-in duration-700">
-          <ModelPlayer />
+          <ModelPlayer v-if="currentProduct" :src="currentProduct?.modelUrl" />
           <div class="mt-6 flex justify-between items-center">
-            <h2 class="text-2xl font-black text-slate-900">Soporte V8</h2>
+            <h2 class="text-2xl font-black text-slate-900">{{ currentProduct?.name }}</h2>
             <p class="text-2xl font-black text-blue-600">{{ currentPrice.toFixed(2) }}€</p>
           </div>
         </div>
