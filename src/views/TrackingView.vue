@@ -1,54 +1,71 @@
-<script setup lang="ts">
-import { ref } from 'vue'
-import ModelPlayer from '../components/ModelPlayer.vue'
-
-const showModel = ref(false)
-</script>
-
 <template>
-  <div class="min-h-screen flex items-center justify-center p-6 pb-32">
-    <div class="w-full max-w-md">
-      <!-- ... (Cabecera igual) ... -->
+  <div class="min-h-screen bg-slate-50/50 p-6 pb-40">
+    <header class="mb-10 mt-4 px-2">
+      <h1 class="text-3xl font-black tracking-tight text-slate-900">Mis Pedidos</h1>
+      <p class="text-slate-500 text-sm mt-1">Sigue el estado de tus piezas</p>
+    </header>
 
-      <main class="bg-white rounded-[2.5rem] p-10 shadow-xl border border-white/60">
-
-        <!-- Si pulsamos el botón, mostramos el visor en lugar del engranaje -->
-        <div v-if="!showModel" class="flex flex-col items-center mb-10">
-          <!-- Aquí va el engranaje ⚙️ que ya tenías -->
-          <div class="relative w-40 h-40 mb-8 flex items-center justify-center">
-            <div class="absolute inset-0 border-[6px] border-blue-500 rounded-full border-t-transparent animate-spin-slow"></div>
-            <span class="text-5xl">⚙️</span>
+    <div v-for="order in orders" :key="order.id" class="mb-8">
+      <div
+        class="bg-white rounded-[3rem] p-8 shadow-sm border border-white relative overflow-hidden"
+      >
+        <div class="flex justify-between items-start mb-8">
+          <div>
+            <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">
+              Orden #{{ order.id }}
+            </p>
+            <h2 class="text-xl font-bold text-slate-900">{{ order.productName }}</h2>
+            <p class="text-xs text-slate-400 mt-1 italic">
+              Entrega estimada: <span class="text-slate-900 font-bold">{{ order.eta }}</span>
+            </p>
           </div>
-          <h2 class="text-3xl font-bold tracking-tight">Soporte Motor</h2>
+          <div class="w-16 h-16 rounded-2xl bg-slate-100 overflow-hidden border border-slate-50">
+            <img :src="order.image" class="w-full h-full object-cover" />
+          </div>
         </div>
 
-        <div v-else class="mb-10 animate-in fade-in zoom-in duration-500">
-          <ModelPlayer />
-          <p class="text-center text-xs text-slate-400 mt-4 italic">Usa un dedo para rotar, dos para hacer zoom</p>
-        </div>
+        <div class="space-y-8 relative">
+          <div class="absolute left-[11px] top-2 bottom-2 w-0.5 bg-slate-100"></div>
 
-        <!-- Botón que activa la magia -->
-        <button @click="showModel = !showModel"
-                class="w-full bg-black text-white py-4 rounded-2xl font-semibold shadow-lg active:scale-95 transition-all">
-          {{ showModel ? 'Cerrar Vista 3D' : 'Ver modelo en 3D' }}
-        </button>
-      </main>
+          <div v-for="(step, index) in order.steps" :key="index" class="flex gap-6 relative">
+            <div
+              :class="[
+                'w-6 h-6 rounded-full border-4 z-10 transition-all duration-500',
+                step.status === 'completed'
+                  ? 'bg-blue-600 border-blue-100'
+                  : step.status === 'active'
+                    ? 'bg-white border-blue-600 animate-pulse'
+                    : 'bg-white border-slate-50',
+              ]"
+            ></div>
+
+            <div
+              :class="['flex-grow pb-2', step.status === 'pending' ? 'opacity-30' : 'opacity-100']"
+            >
+              <h4 class="text-sm font-black text-slate-900">{{ step.title }}</h4>
+              <p class="text-[10px] text-slate-500 leading-tight">{{ step.desc }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
-<style scoped>
-  .animate-spin-slow {
-    animation: spin 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  }
-
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-
-    to {
-      transform: rotate(360deg);
-    }
-  }
-</style>
+<script setup lang="ts">
+const orders = [
+  {
+    id: '4402-X',
+    productName: 'Soporte Motor V8',
+    image:
+      'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80&w=200',
+    eta: '12 Mayo, 2026',
+    steps: [
+      { title: 'Pedido Recibido', desc: 'Tu diseño ha sido validado.', status: 'completed' },
+      { title: 'En Impresión', desc: 'Fabricándose en PETG Carbon.', status: 'active' },
+      { title: 'Control de Calidad', desc: 'Verificación de tolerancias.', status: 'pending' },
+      { title: 'Envío', desc: 'Reparto mediante dron.', status: 'pending' },
+    ],
+  },
+]
+</script>

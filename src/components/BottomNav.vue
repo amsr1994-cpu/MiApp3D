@@ -1,51 +1,79 @@
 <template>
-  <nav class="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-md z-50">
-    <div class="bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.1)] rounded-[2.5rem] p-2 flex justify-around items-center">
-
-      <router-link to="/" class="nav-item" active-class="active">
-        <span class="text-2xl">🔍</span>
-        <span class="label">Explorar</span>
-      </router-link>
-
-      <router-link to="/orders" class="nav-item" active-class="active">
-        <span class="text-2xl">📦</span>
-        <span class="label">Pedidos</span>
-      </router-link>
-
-      <router-link to="/profile" class="nav-item" active-class="active">
-        <span class="text-2xl">👤</span>
-        <span class="label">Perfil</span>
-      </router-link>
-
-    </div>
+  <nav
+    class="fixed bottom-6 left-6 right-6 h-20 bg-white/80 backdrop-blur-2xl rounded-[2.5rem] border border-white/50 shadow-2xl flex items-center justify-around px-4 z-50"
+  >
+    <router-link
+      v-for="item in menuItems"
+      :key="item.path"
+      :to="item.path"
+      class="flex flex-col items-center gap-1 group transition-all"
+      v-slot="{ isActive }"
+    >
+      <div
+        :class="[
+          'p-2 rounded-2xl transition-all duration-300',
+          isActive
+            ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 scale-110'
+            : 'text-slate-400 group-hover:bg-slate-100',
+        ]"
+      >
+        <span class="text-2xl">{{ item.icon }}</span>
+      </div>
+      <span
+        :class="[
+          'text-[10px] font-bold tracking-tight transition-all',
+          isActive
+            ? 'text-blue-600 opacity-100'
+            : 'text-slate-400 opacity-0 group-hover:opacity-100',
+        ]"
+      >
+        {{ item.name }}
+      </span>
+    </router-link>
   </nav>
 </template>
 
-<style scoped>
-  /* Esta línea le enseña a este componente qué clases existen en Tailwind v4 */
-  @reference "../assets/main.css";
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useAuthStore } from '../stores/auth'
 
-  .nav-item {
-    @apply flex flex-col items-center gap-1 p-3 transition-all duration-300 rounded-3xl w-20;
+const auth = useAuthStore()
+
+// Definimos los botones según el rol del usuario
+const menuItems = computed(() => {
+  const role = auth.user?.role || 'cliente'
+
+  const baseMenu = [{ name: 'Perfil', path: '/profile', icon: '👤' }]
+
+  if (role === 'admin') {
+    return [
+      { name: 'Red', path: '/admin-network', icon: '🌐' },
+      { name: 'Validar', path: '/admin-verify', icon: '⚖️' },
+      ...baseMenu,
+    ]
   }
 
-  .label {
-    @apply text-[10px] font-bold uppercase tracking-tighter text-slate-400;
+  if (role === 'fabricante') {
+    return [
+      { name: 'Cola', path: '/print-queue', icon: '⚙️' },
+      { name: 'Taller', path: '/workshop', icon: '🏭' },
+      ...baseMenu,
+    ]
   }
 
-  .nav-item span:first-child {
-    @apply opacity-40 grayscale transition-all;
+  if (role === 'disenador') {
+    return [
+      { name: 'Diseños', path: '/my-models', icon: '🎨' },
+      { name: 'Ventas', path: '/earnings', icon: '📈' },
+      ...baseMenu,
+    ]
   }
 
-  .active {
-    @apply bg-blue-50/50;
-  }
-
-    .active span:first-child {
-      @apply opacity-100 grayscale-0 scale-110;
-    }
-
-    .active .label {
-      @apply text-blue-600;
-    }
-</style>
+  // Por defecto: Menú de Cliente
+  return [
+    { name: 'Explorar', path: '/explore', icon: '🚀' },
+    { name: 'Pedidos', path: '/tracking', icon: '📦' },
+    ...baseMenu,
+  ]
+})
+</script>
