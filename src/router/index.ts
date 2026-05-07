@@ -36,7 +36,11 @@ const router = createRouter({
       name: 'profile',
       component: () => import('../views/ProfileView.vue'),
     },
-
+    {
+      path: '/workshop',
+      name: 'workshop',
+      component: () => import('../views/WorkshopView.vue'),
+    },
     {
       path: '/print-queue',
       name: 'print-queue',

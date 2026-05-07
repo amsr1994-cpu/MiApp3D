@@ -1,108 +1,163 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import ModelPlayer from '../components/ModelPlayer.vue'
+
+const router = useRouter()
 
 // --- ESTADOS ---
 const showModel = ref(false)
 const selectedMaterial = ref('PLA Eco')
+const showCheckout = ref(false) // Controla el panel de pago
+const paymentStatus = ref<'idle' | 'processing' | 'success'>('idle')
 
 // --- LÓGICA DE PRECIOS ---
-// Definimos los precios con un tipo estricto para que TypeScript no se queje
 const materialPrices: Record<string, number> = {
   'PLA Eco': 19.9,
   'PETG Carbon': 29.9,
   'Nylon PA12': 45.0,
 }
-
-// Calculamos el precio. Añadimos un "|| 0" por seguridad para TS
 const currentPrice = computed(() => materialPrices[selectedMaterial.value] || 0)
+
+// --- PROCESO DE PAGO ---
+const startPayment = () => {
+  paymentStatus.value = 'processing'
+
+  // Simulamos la verificación bancaria/biométrica
+  setTimeout(() => {
+    paymentStatus.value = 'success'
+
+    // Después de ver el check verde, vamos a Tracking
+    setTimeout(() => {
+      showCheckout.value = false
+      router.push('/tracking')
+    }, 2000)
+  }, 2500)
+}
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#F5F5F7] p-6 pb-40">
-    <div class="w-full max-w-lg mx-auto">
+  <div class="min-h-screen bg-[#F5F5F7] p-6 pb-40 relative">
+    <div
+      :class="[
+        'w-full max-w-lg mx-auto transition-all duration-500',
+        showCheckout ? 'scale-95 blur-sm' : '',
+      ]"
+    >
       <button
         @click="$router.back()"
         class="mb-6 text-slate-400 font-bold text-xs uppercase tracking-widest flex items-center gap-2"
       >
-        ← Volver al catálogo
+        ← Volver
       </button>
 
-      <main class="bg-white rounded-[3rem] p-8 shadow-2xl shadow-slate-200/50 border border-white">
+      <main class="bg-white rounded-[3rem] p-8 shadow-2xl border border-white">
         <div v-if="!showModel" class="flex flex-col items-center py-10">
           <div class="relative w-48 h-48 mb-12 flex items-center justify-center">
             <div class="absolute inset-0 border-[8px] border-blue-600/10 rounded-full"></div>
             <div
               class="absolute inset-0 border-[8px] border-blue-600 rounded-full border-t-transparent animate-spin-slow"
             ></div>
-            <span class="text-6xl filter drop-shadow-lg text-slate-800">⚙️</span>
+            <span class="text-6xl">⚙️</span>
           </div>
-          <div class="text-center">
-            <p class="text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] mb-2">
-              Ingeniería Avanzada
-            </p>
-            <h2 class="text-4xl font-black text-slate-900 tracking-tight">Soporte V8</h2>
-            <p class="text-slate-400 text-sm mt-2 max-w-[200px] mx-auto leading-relaxed">
-              Alta resistencia térmica para motores de competición.
-            </p>
-          </div>
+          <h2 class="text-4xl font-black text-slate-900 tracking-tight">Soporte V8</h2>
         </div>
 
-        <div v-else class="mb-10 animate-in fade-in zoom-in slide-in-from-bottom-8 duration-700">
+        <div v-else class="mb-10 animate-in fade-in zoom-in duration-700">
           <ModelPlayer />
-          <div class="mt-6 flex justify-between items-center px-2">
-            <div>
-              <h2 class="text-2xl font-black text-slate-900">Soporte Motor V8</h2>
-              <p class="text-xs text-slate-400 font-bold uppercase tracking-tighter">
-                Vista Previa de Manufactura
-              </p>
-            </div>
+          <div class="mt-6 flex justify-between items-center">
+            <h2 class="text-2xl font-black text-slate-900">Soporte V8</h2>
             <p class="text-2xl font-black text-blue-600">{{ currentPrice.toFixed(2) }}€</p>
-          </div>
-        </div>
-
-        <div
-          v-if="showModel"
-          class="space-y-6 mb-10 animate-in fade-in slide-in-from-bottom-4 delay-300"
-        >
-          <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase mb-3 ml-1">
-              Material de fabricación
-            </p>
-            <div class="flex gap-2">
-              <button
-                v-for="(price, mat) in materialPrices"
-                :key="mat"
-                @click="selectedMaterial = mat"
-                :class="[
-                  'px-4 py-2 rounded-xl text-xs font-bold transition-all',
-                  selectedMaterial === mat
-                    ? 'bg-slate-900 text-white shadow-lg'
-                    : 'bg-slate-100 text-slate-500',
-                ]"
-              >
-                {{ mat }}
-              </button>
-            </div>
           </div>
         </div>
 
         <button
           @click="showModel = !showModel"
-          class="w-full bg-blue-600 text-white py-5 rounded-[1.8rem] font-bold shadow-xl shadow-blue-200 active:scale-95 transition-all flex items-center justify-center gap-3"
+          class="w-full bg-blue-600 text-white py-5 rounded-[1.8rem] font-bold shadow-xl mb-4"
         >
-          <span>{{ showModel ? 'Cerrar Vista Realista' : 'Explorar en 3D' }}</span>
-          <span v-if="!showModel">🧊</span>
+          {{ showModel ? 'Cerrar 3D' : 'Explorar en 3D' }}
         </button>
 
         <button
           v-if="showModel"
-          class="w-full mt-4 bg-slate-900 text-white py-5 rounded-[1.8rem] font-bold shadow-xl active:scale-95 transition-all"
+          @click="showCheckout = true"
+          class="w-full bg-slate-900 text-white py-5 rounded-[1.8rem] font-bold shadow-xl animate-in slide-in-from-bottom-2"
         >
           Encargar Fabricación
         </button>
       </main>
     </div>
+
+    <transition name="sheet">
+      <div v-if="showCheckout" class="fixed inset-0 z-[100] flex items-end">
+        <div
+          @click="paymentStatus === 'idle' ? (showCheckout = false) : null"
+          class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        ></div>
+
+        <div
+          class="relative w-full bg-white rounded-t-[3rem] p-10 pb-16 shadow-[0_-20px_50px_rgba(0,0,0,0.2)]"
+        >
+          <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-8"></div>
+
+          <div v-if="paymentStatus === 'idle'">
+            <div class="flex justify-between items-center mb-8">
+              <h3 class="text-2xl font-black text-slate-900">Confirmar Pedido</h3>
+              <span class="text-2xl">💳</span>
+            </div>
+
+            <div class="space-y-4 mb-10">
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-400 font-bold uppercase">Producto</span>
+                <span class="font-black text-slate-900">Soporte V8 ({{ selectedMaterial }})</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-400 font-bold uppercase">Envío</span>
+                <span class="font-black text-green-600">GRATIS (Dron)</span>
+              </div>
+              <div class="h-px bg-slate-100 w-full"></div>
+              <div class="flex justify-between text-xl">
+                <span class="font-black text-slate-900">Total</span>
+                <span class="font-black text-blue-600">{{ currentPrice.toFixed(2) }}€</span>
+              </div>
+            </div>
+
+            <button
+              @click="startPayment"
+              class="w-full bg-slate-900 text-white py-6 rounded-3xl font-black flex items-center justify-center gap-3 active:scale-95 transition-all"
+            >
+              <span>Pagar con FaceID</span>
+              <span class="text-xl">📷</span>
+            </button>
+          </div>
+
+          <div
+            v-else-if="paymentStatus === 'processing'"
+            class="py-12 flex flex-col items-center animate-in fade-in"
+          >
+            <div
+              class="w-20 h-20 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-6"
+            ></div>
+            <p class="font-bold text-slate-400 uppercase tracking-widest text-xs">
+              Verificando Pago...
+            </p>
+          </div>
+
+          <div
+            v-else-if="paymentStatus === 'success'"
+            class="py-12 flex flex-col items-center animate-in zoom-in"
+          >
+            <div
+              class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center text-white text-4xl shadow-xl shadow-green-100 mb-6"
+            >
+              ✓
+            </div>
+            <p class="font-black text-slate-900 text-xl">¡Pago Completado!</p>
+            <p class="text-slate-400 text-sm mt-1">Redirigiendo a seguimiento...</p>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -118,5 +173,15 @@ const currentPrice = computed(() => materialPrices[selectedMaterial.value] || 0)
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Animación del Panel (Sheet) */
+.sheet-enter-active,
+.sheet-leave-active {
+  transition: all 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.sheet-enter-from,
+.sheet-leave-to {
+  transform: translateY(100%);
 }
 </style>
